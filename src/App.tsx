@@ -10,8 +10,6 @@ import {
   Save,
   X,
   GripVertical,
-  Youtube,
-  Tv,
 } from 'lucide-react';
 
 type BaseExercise = {
@@ -44,8 +42,6 @@ type Routine = {
 };
 
 type View = 'home' | 'exercises' | 'builder' | 'runner';
-
-type VideoSource = 'youtube' | 'netflix';
 
 type ExerciseFormState = {
   name: string;
@@ -840,15 +836,13 @@ const RoutineRunner: React.FC<{
   const [timeRemaining, setTimeRemaining] = useState(0);
   const [isPaused, setIsPaused] = useState(true);
   const [isComplete, setIsComplete] = useState(false);
-  const [videoSource, setVideoSource] = useState<VideoSource>('youtube');
   const [videoQuery, setVideoQuery] = useState('');
   const [videoResults, setVideoResults] = useState<VideoResult[]>(DEFAULT_VIDEO_LIBRARY);
   const [isSearchingVideo, setIsSearchingVideo] = useState(false);
   const [videoError, setVideoError] = useState<string | null>(null);
   const [selectedVideo, setSelectedVideo] = useState<VideoResult | null>(null);
-  const [netflixReady, setNetflixReady] = useState(false);
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
-  const isVideoFocused = (videoSource === 'youtube' && Boolean(selectedVideo) && !isPaused) || (videoSource === 'netflix' && netflixReady && !isPaused);
+  const isVideoFocused = Boolean(selectedVideo) && !isPaused;
   const totalTimedSeconds = useMemo(
     () => routine.exercises.reduce((total, exercise) => total + getTimedExerciseTotalSeconds(exercise), 0),
     [routine.exercises],
@@ -1089,44 +1083,13 @@ const RoutineRunner: React.FC<{
                 <div>
                   <h2 className="text-2xl font-bold text-slate-100 mb-1">Video motivacional</h2>
                   <p className="text-sm text-slate-400">
-                    {videoSource === 'youtube' 
-                      ? 'Busca en YouTube y elige un video para que te acompañe durante toda la rutina.'
-                      : 'Inicia sesión en Netflix y elige algo para ver mientras entrenas.'}
+                    Busca en YouTube y elige un video para que te acompañe durante toda la rutina.
                   </p>
                 </div>
               )}
 
-              {!isVideoFocused && (
-                <div className="flex gap-2 mb-2">
-                  <button
-                    type="button"
-                    onClick={() => { setVideoSource('youtube'); setNetflixReady(false); }}
-                    className={`flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-xl font-semibold transition-colors ${
-                      videoSource === 'youtube'
-                        ? 'bg-red-600 text-white'
-                        : 'bg-slate-800 text-slate-300 hover:bg-slate-700'
-                    }`}
-                  >
-                    <Youtube size={20} />
-                    YouTube
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => { setVideoSource('netflix'); setSelectedVideo(null); }}
-                    className={`flex-1 flex items-center justify-center gap-2 px-4 py-3 rounded-xl font-semibold transition-colors ${
-                      videoSource === 'netflix'
-                        ? 'bg-red-700 text-white'
-                        : 'bg-slate-800 text-slate-300 hover:bg-slate-700'
-                    }`}
-                  >
-                    <Tv size={20} />
-                    Netflix
-                  </button>
-                </div>
-              )}
-
               <div className={`video-pane-scroll${isVideoFocused ? ' video-pane-scroll--focused' : ''}`}>
-                {videoSource === 'youtube' && !isVideoFocused && (
+                {!isVideoFocused && (
                   <>
                     <form className="flex flex-col gap-3" onSubmit={handleVideoSearch}>
                       <div className="flex flex-col gap-3 sm:flex-row">
@@ -1158,121 +1121,54 @@ const RoutineRunner: React.FC<{
                   </>
                 )}
 
-                {videoSource === 'netflix' && !isVideoFocused && (
-                  <div className="space-y-4">
-                    <div className="text-xs text-slate-300 bg-slate-800/70 border border-slate-700 rounded-lg p-4 space-y-3">
-                      <p className="font-semibold text-amber-400">⚠️ Netflix bloqueja ser incrustat per seguretat</p>
-                      <p>Per veure Netflix al costat de l'entrenament, segueix aquests passos:</p>
-                      
-                      <div className="space-y-2">
-                        <p className="font-semibold text-slate-200">📺 Opció 1: Picture-in-Picture (recomanat)</p>
-                        <ol className="list-decimal list-inside space-y-1 text-slate-400">
-                          <li>Obre Netflix en nova pestanya</li>
-                          <li>Reprodueix el vídeo</li>
-                          <li>Fes clic dret 2 cops sobre el vídeo → "Picture in Picture"</li>
-                          <li>El vídeo flotarà sobre aquesta app!</li>
-                        </ol>
-                      </div>
-
-                      <div className="space-y-2">
-                        <p className="font-semibold text-slate-200">🖥️ Opció 2: Dividir pantalla</p>
-                        <ol className="list-decimal list-inside space-y-1 text-slate-400">
-                          <li>Obre Netflix en nova pestanya</li>
-                          <li>Prem <kbd className="bg-slate-900 px-1.5 py-0.5 rounded text-xs">Super + ←</kbd> per posar Netflix a l'esquerra</li>
-                          <li>Prem <kbd className="bg-slate-900 px-1.5 py-0.5 rounded text-xs">Super + →</kbd> en aquesta finestra per posar-la a la dreta</li>
-                        </ol>
-                      </div>
-                    </div>
-
-                    <button
-                      type="button"
-                      onClick={() => window.open('https://www.netflix.com/browse', '_blank')}
-                      className="w-full px-4 py-3 rounded-lg bg-red-700 text-white font-semibold hover:bg-red-600 transition-colors flex items-center justify-center gap-2"
-                    >
-                      <Tv size={20} />
-                      Obrir Netflix en nova pestanya
-                    </button>
-                    {!netflixReady && (
-                      <button
-                        type="button"
-                        onClick={() => setNetflixReady(true)}
-                        className="w-full px-4 py-3 rounded-lg bg-emerald-700 text-white font-semibold hover:bg-emerald-600 transition-colors"
-                      >
-                        ✓ Llest per entrenar
-                      </button>
-                    )}
-                  </div>
-                )}
-
                 <div className={`video-pane-grid${isVideoFocused ? ' video-pane-grid--focused' : ''}`}>
                   <div className="video-player-shell">
-                    {videoSource === 'youtube' ? (
-                      selectedVideo ? (
-                        <iframe
-                          key={selectedVideo.id}
-                          src={`https://www.youtube.com/embed/${selectedVideo.id}?autoplay=1&rel=0&modestbranding=1`}
-                          title={selectedVideo.title}
-                          allow="autoplay; encrypted-media; picture-in-picture"
-                          allowFullScreen
-                        />
-                      ) : (
-                        <div className="video-player-placeholder">
-                          <p className="text-lg font-semibold mb-2">Sincroniza un video</p>
-                          <p className="text-sm text-slate-300">
-                            Realiza una búsqueda y selecciona un video. Se reproducirá continuamente hasta que termines la rutina.
-                          </p>
-                        </div>
-                      )
+                    {selectedVideo ? (
+                      <iframe
+                        key={selectedVideo.id}
+                        src={`https://www.youtube.com/embed/${selectedVideo.id}?autoplay=1&rel=0&modestbranding=1`}
+                        title={selectedVideo.title}
+                        allow="autoplay; encrypted-media; picture-in-picture"
+                        allowFullScreen
+                      />
                     ) : (
-                      <div className="video-player-placeholder flex flex-col items-center justify-center text-center p-6">
-                        <Tv size={48} className="text-red-500 mb-4" />
-                        <p className="text-lg font-semibold mb-2">Netflix en otra ventana</p>
-                        <p className="text-sm text-slate-300 mb-4">
-                          Puedes ver Netflix en la ventana que has abierto mientras entrenas aquí.
+                      <div className="video-player-placeholder">
+                        <p className="text-lg font-semibold mb-2">Sincroniza un video</p>
+                        <p className="text-sm text-slate-300">
+                          Realiza una búsqueda y selecciona un video. Se reproducirá continuamente hasta que termines la rutina.
                         </p>
-                        {netflixReady && (
-                          <button
-                            type="button"
-                            onClick={() => window.open('https://www.netflix.com/browse', '_blank')}
-                            className="px-4 py-2 rounded-lg bg-red-700 text-white font-semibold hover:bg-red-600 transition-colors flex items-center gap-2"
-                          >
-                            <Tv size={18} />
-                            Abrir Netflix de nuevo
-                          </button>
-                        )}
                       </div>
                     )}
+                  
                   </div>
 
-                  {videoSource === 'youtube' && (
-                    <div
-                      className={`video-results-card${isVideoFocused ? ' video-results-card--hidden' : ''}`}
-                      aria-hidden={isVideoFocused}
-                    >
-                      <h3 className="text-base font-semibold text-slate-200 mb-2">Resultados</h3>
-                      <div className="video-results-list">
-                        {videoResults.map((video) => (
-                          <button
-                            key={video.id}
-                            type="button"
-                            className={`video-option${selectedVideo?.id === video.id ? ' video-option--active' : ''}`}
-                            onClick={() => handleSelectVideo(video)}
-                          >
-                            <img src={video.thumbnail} alt={`Miniatura del video ${video.title}`} loading="lazy" />
-                            <div>
-                              <p className="video-option__title">{video.title}</p>
-                              <p className="video-option__subtitle">
-                                {selectedVideo?.id === video.id ? 'Reproduciendo ahora' : 'Pulsa para reproducir'}
-                              </p>
-                            </div>
-                          </button>
-                        ))}
-                        {videoResults.length === 0 && (
-                          <p className="text-sm text-slate-400">Empieza a escribir para obtener sugerencias.</p>
-                        )}
-                      </div>
+                  <div
+                    className={`video-results-card${isVideoFocused ? ' video-results-card--hidden' : ''}`}
+                    aria-hidden={isVideoFocused}
+                  >
+                    <h3 className="text-base font-semibold text-slate-200 mb-2">Resultados</h3>
+                    <div className="video-results-list">
+                      {videoResults.map((video) => (
+                        <button
+                          key={video.id}
+                          type="button"
+                          className={`video-option${selectedVideo?.id === video.id ? ' video-option--active' : ''}`}
+                          onClick={() => handleSelectVideo(video)}
+                        >
+                          <img src={video.thumbnail} alt={`Miniatura del video ${video.title}`} loading="lazy" />
+                          <div>
+                            <p className="video-option__title">{video.title}</p>
+                            <p className="video-option__subtitle">
+                              {selectedVideo?.id === video.id ? 'Reproduciendo ahora' : 'Pulsa para reproducir'}
+                            </p>
+                          </div>
+                        </button>
+                      ))}
+                      {videoResults.length === 0 && (
+                        <p className="text-sm text-slate-400">Empieza a escribir para obtener sugerencias.</p>
+                      )}
                     </div>
-                  )}
+                  </div>
                 </div>
               </div>
             </div>
